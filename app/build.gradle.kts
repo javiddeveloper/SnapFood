@@ -49,8 +49,11 @@ android {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
+//        resources {
+//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//        }
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/{AL2.0,LGPL2.1,INDEX.LIST,DEPENDENCIES}"
         }
     }
     room {
@@ -75,10 +78,11 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Ktor Client
-    implementation (libs.ktor.client.core)
-    implementation (libs.ktor.client.android)
-    implementation (libs.ktor.client.serialization)
-    implementation (libs.ktor.client.logging)
+
+    implementation("io.ktor:ktor-client-core:3.0.3")
+    implementation("io.ktor:ktor-client-cio:3.0.3")
+    implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
+//    implementation("io.ktor:ktor-serialization-gson:3.0.3")
 
 
     // Room
