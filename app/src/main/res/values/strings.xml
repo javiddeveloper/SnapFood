@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SnapFood</string>
+    <string name="empty_message">آیتمی یافت نشد</string>
 </resources>
