@@ -1,166 +1,216 @@
 package ir.javid.satttar.snapfood.presentation.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ir.javid.satttar.snapfood.R
-import ir.javid.satttar.snapfood.domain.model.Video
-import ir.javid.satttar.snapfood.presentation.viewModel.MainScreenStates
+import ir.javid.satttar.snapfood.domain.model.CharacterVideo
 import ir.javid.satttar.snapfood.presentation.viewModel.MainViewModel
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsData
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsIntent
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsState
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsState.CharactersLoaded
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsState.Empty
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsState.Error
+import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsState.Loading
 
 /**
  * @author  : Javid
  * @summary : MainRoute
  */
+const val MAX_QUERY_LENGTH = 1
 @Composable
 fun MainRoute(
     viewModel: MainViewModel,
-    detailClick: (Video) -> Unit
+    onCharacterSelected: (String) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.state.collectAsState()
 
+    var searchValue by remember {
+        mutableStateOf("")
+    }
+
+    LaunchedEffect(searchValue) {
+        if (searchValue.isNotBlank() && searchValue.length >= MAX_QUERY_LENGTH)
+            viewModel.onIntent(StarWarsIntent.SearchCharacters(searchValue))
+
+    }
     LaunchedEffect(Unit) {
-//        viewModel.getAllVideos()
+        viewModel.updateState(newState= CharactersLoaded)
     }
 
     MainScreen(
-        detailClick = detailClick,
-        uiState = uiState
+        uiState = uiState.state,
+        uiData = uiState.data,
+        searchValue = searchValue,
+        onCharacterSelected = {
+            onCharacterSelected(it.uid)
+        },
+        searchCharacters = { query ->
+            searchValue = query
+        }
     )
 }
 
 @Composable
 private fun MainScreen(
-    uiState: MainScreenStates,
-    detailClick: (Video) -> Unit
+    uiState: StarWarsState,
+    uiData: StarWarsData?,
+    searchValue: String,
+    searchCharacters: (String) -> Unit,
+    onCharacterSelected: (CharacterVideo) -> Unit,
 ) {
     Scaffold(
         topBar = {
-
         }
     ) { padding ->
-        if (uiState.iisLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (uiState.videos.isNullOrEmpty()) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            verticalArrangement = Arrangement.Top
+        ) {
+            TextField(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = stringResource(id = R.string.empty_message),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        } else {
-            val list = uiState.videos
-            LazyColumn(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp)
-            ) {
-                items(list.size, key = { i -> list[i].id }) { i ->
-                    VideoListItem(
-                        video = list[i],
-                        onItemClick = {
-                            detailClick(list[i])
+                    .fillMaxWidth(),
+                value = searchValue,
+                onValueChange = { query ->
+                    searchCharacters(query)
+                },
+                label = { Text("Search Characters") }
+            )
+            when (uiState) {
+                is Loading -> CircularProgressIndicator()
+                is Empty -> Text("No results found.")
+                is CharactersLoaded -> {
+                    val characters = uiData?.characters
+                    characters?.let {
+                        LazyColumn {
+                            items(characters.size, key = { characters[it].id }) { index ->
+                                CharacterItem(characters[index]){
+                                    onCharacterSelected(it)
+                                }
+                            }
                         }
-                    )
+                    }
                 }
+
+                is Error -> Text(
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxSize(),
+                    text = "Error: ${uiState.message}"
+                )
+
+                else -> {}
             }
         }
     }
 }
-
 @Composable
-fun VideoListItem(
-    video: Video,
-    onItemClick: () -> Unit
+fun CharacterItem(
+    character: CharacterVideo,
+    onClick:(CharacterVideo)->Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onItemClick() },
+            .padding(8.dp)
+            .clickable {
+                onClick(character)
+            },
         shape = RoundedCornerShape(8.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+            // Name
+            Text(
+                text = character.properties.name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Basic Info Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = video.name.firstOrNull()?.toString() ?: "?",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    text = "Height: ${character.properties.height} cm",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = "Mass: ${character.properties.mass} kg",
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            // Other Properties
+            Text(
+                text = "Hair Color: ${character.properties.hairColor}",
+                style = MaterialTheme.typography.labelLarge
+            )
+            Text(
+                text = "Eye Color: ${character.properties.eyeColor}",
+                style = MaterialTheme.typography.labelLarge
+            )
+            Text(
+                text = "Birth Year: ${character.properties.birthYear}",
+                style = MaterialTheme.typography.labelLarge
+            )
 
-            Column(
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = video.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Description
+            Text(
+                text = character.description,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary
+            )
         }
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewItem() {
-    VideoListItem(video = Video(0, "Javid")) {
-
-    }
+    MainScreen(
+        uiState = Error("Error"),
+        uiData = StarWarsData(),
+        searchValue = "",
+        searchCharacters = {},
+        onCharacterSelected = {},
+    )
 }
 

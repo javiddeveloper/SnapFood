@@ -3,8 +3,8 @@ package ir.javid.satttar.snapfood.presentation.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import ir.javid.satttar.snapfood.domain.model.Video
 import ir.javid.satttar.snapfood.domain.useCase.ManageVideosUseCase
+import ir.javid.satttar.snapfood.presentation.tools.ViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -21,36 +21,53 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val useCase: ManageVideosUseCase
 ) : ViewModel() {
+    private val _state = MutableStateFlow(ViewState<StarWarsData>(StarWarsState.Idle))
+    val state = _state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
-    private val _uiState = MutableStateFlow(MainScreenStates())
-    val uiState =
-        _uiState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _uiState.value)
-
-
-    fun getAllVideos() {
+    // Handle user intents
+    fun onIntent(intent: StarWarsIntent) {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(iisLoading = true)
-            }
-            val response = useCase.getAllVideos()
-            _uiState.update {
-                it.copy(
-                    iisLoading = false,
-                    videos = response
-                )
+            when (intent) {
+                is StarWarsIntent.SearchCharacters -> searchCharacters(intent.query)
+                is StarWarsIntent.GetCharacterDetails -> getCharacterDetails(intent.characterId)
             }
         }
     }
-    fun getVideo(id:Int) {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(iisLoading = true)
-            }
-            val response = useCase.detailVideo(id)
-            _uiState.update {
+
+    fun updateState(newState: StarWarsState, data: StarWarsData? = null) {
+        _state.update {
+            it.copy(state = newState, data = data)
+        }
+    }
+
+    private fun searchCharacters(query: String) = viewModelScope.launch {
+        _state.update { it.copy(state = StarWarsState.Loading) }
+        useCase.searchCharacters(query).collect { result ->
+            if (result.isEmpty())
+                _state.update { it.copy(state = StarWarsState.Empty) }
+            else
+                _state.update {
+                    it.copy(
+                        state = StarWarsState.CharactersLoaded,
+                        data = StarWarsData(
+                            characters = result
+                        )
+                    )
+                }
+        }
+
+    }
+
+
+    private fun getCharacterDetails(characterId: String) = viewModelScope.launch {
+        _state.update { it.copy(state = StarWarsState.Loading) }
+        useCase.getCharacterDetails(characterId).collect { result ->
+            _state.update {
                 it.copy(
-                    iisLoading = false,
-                    video = response
+                    state = StarWarsState.CharacterDetailsLoaded,
+                    data = StarWarsData(
+                        character = result
+                    )
                 )
             }
         }
@@ -58,8 +75,6 @@ class MainViewModel @Inject constructor(
 }
 
 
-data class MainScreenStates(
-    val iisLoading: Boolean = false,
-    val videos: List<Video>? = null,
-    val video: Video? = null
-)
+
+
+
