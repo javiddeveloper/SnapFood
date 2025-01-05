@@ -36,7 +36,7 @@ fun DebouncedSearch(
     mainText: (String) -> Unit
 
 ) {
-    var text by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf("s") }
     LaunchedEffect(text) {
         delay(debounceTime)
         mainText(text)
