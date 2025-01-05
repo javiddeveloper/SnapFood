@@ -16,19 +16,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ir.javid.satttar.snapfood.domain.model.CharacterVideo
+import ir.javid.satttar.snapfood.presentation.tools.components.DebouncedSearch
 import ir.javid.satttar.snapfood.presentation.viewModel.MainViewModel
 import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsData
 import ir.javid.satttar.snapfood.presentation.viewModel.StarWarsIntent
@@ -50,7 +50,7 @@ fun MainRoute(
 ) {
     val uiState by viewModel.state.collectAsState()
 
-    var searchValue by remember {
+    var searchValue by rememberSaveable{
         mutableStateOf("")
     }
 
@@ -59,7 +59,7 @@ fun MainRoute(
             viewModel.onIntent(StarWarsIntent.SearchCharacters(searchValue))
 
     }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(searchValue) {
         viewModel.updateState(newState= CharactersLoaded)
     }
 
@@ -94,15 +94,19 @@ private fun MainScreen(
                 .padding(padding),
             verticalArrangement = Arrangement.Top
         ) {
-            TextField(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                value = searchValue,
-                onValueChange = { query ->
-                    searchCharacters(query)
-                },
-                label = { Text("Search Characters") }
+            DebouncedSearch(
+                mainText = {
+                    searchCharacters(it)
+                }
             )
+//            TextField(
+//                modifier = Modifier.fillMaxWidth(),
+//                value = searchValue,
+//                onValueChange = { query ->
+//                    searchCharacters(query)
+//                },
+//                label = { Text("Search Characters") }
+//            )
             when (uiState) {
                 is Loading -> CircularProgressIndicator()
                 is Empty -> Text("No results found.")

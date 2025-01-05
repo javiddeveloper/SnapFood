@@ -30,7 +30,7 @@ class VideoRepositoryImpl @Inject constructor(
         return object : NetworkBoundResource<List<CharacterVideo>, List<CharacterVideoDto>>() {
 
             override suspend fun fetchFromLocal(): List<CharacterVideo>? {
-                return characterDao.getAllCharacters()?.map { it.toDomainModel() }
+                return characterDao.getQueryCharacters(query)?.map { it.toDomainModel() }
             }
 
             override suspend fun fetchFromNetwork(): List<CharacterVideoDto> {

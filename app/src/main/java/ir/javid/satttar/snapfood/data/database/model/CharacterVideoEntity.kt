@@ -18,6 +18,7 @@ data class CharacterVideoEntity(
     @ColumnInfo(name = "uid")
     val uid: String,
     val id: String,
+    @ColumnInfo(name = "properties")
     val properties: PropertiesEntity,
     val description: String,
 )

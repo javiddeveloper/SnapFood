@@ -24,8 +24,13 @@ interface CharacterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCharacterVideoDetail(characterVideoEntity: CharacterVideoDetailEntity)
 
-    @Query("SELECT * FROM CharacterVideoEntity")
-    suspend fun getAllCharacters(): List<CharacterVideoEntity>?
+    @Query("""
+      SELECT * FROM CharacterVideoEntity c
+    LEFT JOIN PropertiesEntity p ON c.uid = uid
+    WHERE c.description LIKE '%' || :keyword || '%'
+    OR p.name LIKE '%' || :keyword || '%'
+""")
+    suspend fun getQueryCharacters(keyword: String): List<CharacterVideoEntity>?
 
     @Query("SELECT * FROM CharacterVideoDetailEntity where uid = :uid limit 1")
     suspend fun getCharacterVideoDetail(uid:String): CharacterVideoDetailEntity?
