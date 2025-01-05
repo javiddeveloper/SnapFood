@@ -1,6 +1,8 @@
 package ir.javid.satttar.snapfood.domain.repository
 
-import ir.javid.satttar.snapfood.domain.model.Video
+import ir.javid.satttar.snapfood.domain.model.CharacterVideo
+import ir.javid.satttar.snapfood.domain.model.CharacterWithDetails
+import kotlinx.coroutines.flow.Flow
 
 /**
  * @author  : Javid
@@ -8,6 +10,6 @@ import ir.javid.satttar.snapfood.domain.model.Video
  */
 
 interface VideoRepository {
-     suspend fun detailVideo(id: Int): Video
-     suspend fun getAllVideos():List<Video>
+     suspend fun searchCharacters(query: String): Flow<List<CharacterVideo>>
+     suspend fun getCharacterDetails(characterId: String): Flow<CharacterWithDetails>
 }
