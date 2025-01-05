@@ -20,7 +20,7 @@ object Screen {
     object MainRoute
 
     @Serializable
-    data class DetailRoute(val param: Int)
+    data class DetailRoute(val param: String)
 }
 
 @Composable
@@ -32,14 +32,14 @@ fun AppNavHost(navController: NavHostController) {
         composable<Screen.MainRoute> {
             MainRoute(
                 viewModel = mainViewModel,
-                detailClick = {
-                    navController.navigate(Screen.DetailRoute(it.id))
+                onCharacterSelected = {
+                    navController.navigate(Screen.DetailRoute(it))
                 }
             )
         }
         composable<Screen.DetailRoute> { backStackEntry ->
-            val videoId = backStackEntry.toRoute<Screen.DetailRoute>()
-            DetailRoute(viewModel = mainViewModel, videoId = videoId.param)
+            val characterId = backStackEntry.toRoute<Screen.DetailRoute>()
+            DetailRoute(viewModel = mainViewModel, characterId = characterId.param)
         }
     }
 }
