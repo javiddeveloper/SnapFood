@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -49,11 +50,8 @@ android {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
-//        resources {
-//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-//        }
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1,INDEX.LIST,DEPENDENCIES}"
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
     room {
@@ -77,14 +75,6 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
 
-    // Ktor Client
-
-    implementation("io.ktor:ktor-client-core:3.0.3")
-    implementation("io.ktor:ktor-client-cio:3.0.3")
-    implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
-//    implementation("io.ktor:ktor-serialization-gson:3.0.3")
-
-
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -102,8 +92,11 @@ dependencies {
     // Coil
     implementation (libs.coil.compose)
 
+    //Retrofit & Gson
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
 
-    // Test
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

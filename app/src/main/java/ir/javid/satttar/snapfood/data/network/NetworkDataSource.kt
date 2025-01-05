@@ -1,8 +1,9 @@
 package ir.javid.satttar.snapfood.data.network
 
-import io.ktor.client.HttpClient
-import ir.javid.satttar.snapfood.data.network.tools.apiSafeCall
-import ir.javid.satttar.snapfood.domain.model.Video
+import ir.javid.satttar.snapfood.data.network.model.CharacterVideoDetailDto
+import ir.javid.satttar.snapfood.data.network.model.CharacterVideoDto
+import ir.javid.satttar.snapfood.data.network.retrofit.ApiService
+import ir.javid.satttar.snapfood.data.network.tools.safeApiCall
 import javax.inject.Inject
 
 /**
@@ -11,18 +12,19 @@ import javax.inject.Inject
  */
 
 class NetworkDataSource @Inject constructor(
-    private val httpClient: HttpClient
+    private val api: ApiService
 ) {
-    suspend fun getAllVideo(page: Int, limit: Int = 10): List<Video>? {
-        return apiSafeCall<List<Video>>(
-            httpClient, url = "people/",
-            queryParams = mapOf("page" to "$page", "limit" to "$limit")
-        )
+    suspend fun searchCharacters(query: String): List<CharacterVideoDto> {
+        return safeApiCall {
+            api.searchCharacters(query)
+        }
+
     }
-    suspend fun getVideo(id: Int): Video? {
-        return apiSafeCall<Video>(
-            httpClient, url = "people/{id}",
-            pathParams = mapOf("id" to "$id")
-        )
+
+    suspend fun getCharacterDetails(characterId: String): CharacterVideoDetailDto {
+        return safeApiCall {
+            api.getCharacterDetails(characterId)
+        }
     }
+
 }
