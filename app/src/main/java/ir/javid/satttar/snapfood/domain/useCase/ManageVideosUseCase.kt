@@ -11,6 +11,7 @@ import javax.inject.Inject
 class ManageVideosUseCase @Inject constructor(
     private val repository: VideoRepository
 ) {
-    suspend fun detailVideo(id: Int) = repository.detailVideo(id)
-    suspend fun getAllVideos() = repository.getAllVideos()
+    suspend fun searchCharacters(query: String) = repository.searchCharacters(query)
+    suspend fun getCharacterDetails(characterId: String) =
+        repository.getCharacterDetails(characterId)
 }

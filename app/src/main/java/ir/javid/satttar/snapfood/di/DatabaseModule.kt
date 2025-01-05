@@ -7,8 +7,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import ir.javid.satttar.snapfood.data.database.AppDao
+import ir.javid.satttar.snapfood.data.database.CharacterDao
 import ir.javid.satttar.snapfood.data.database.AppDatabase
+import ir.javid.satttar.snapfood.data.database.SearchHistoryDao
 import javax.inject.Singleton
 
 /**
@@ -32,7 +33,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDao(database: AppDatabase): AppDao {
-        return database.appDao()
+    fun provideDao(database: AppDatabase): CharacterDao {
+        return database.characterDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchHistoryDao(database: AppDatabase): SearchHistoryDao {
+        return database.searchHistoryDao()
     }
 }
